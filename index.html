@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        /**
+        定义全局长宽和边框
+         */
+        #game{
+            width: 300px;
+            height: 300px;
+            border: 1px solid black;
+            border-radius: 10px;
+        }
+        /**
+        定义每一行的cs样式
+         */
+        .row{
+            width: 300px;
+            height: 100px;
+            display: flex;
+            border-radius: 10px;
+        }
+        /**
+        定义每一个方格的cs样式
+         */
+        .cell{
+            width: 100px;
+            height: 99px;
+            font-size: 70px;
+            text-align: center;
+            border: 1px solid black;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+<div id="game">
+    <div class="row">
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+    </div>
+    <div class="row">
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+    </div>
+    <div class="row">
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+    </div>
+</div>
+
+</body>
+<script>
+    // 拼图游戏对象
+    function JigsawPuzzle() {
+        // 定义图片四周的下标变化，假设当前图片下标为index，
+        // 那么index+direct[i]就可以得到相应周围图片的下标
+        this.directs = [1, -1, 3, -3];
+
+        // 定义拼图游戏的9个格子
+        this.cells = [];
+
+        // 游戏初始化函数
+        this.Init = function () {
+            // 1. 将9个div放入cells数组中
+            this.cells = document.getElementsByClassName("cell");
+
+            // 2. 为每个cell，随机填充一个数字
+            while (true) {
+                this.randomFillCells();
+                let rn = this.reverseNumber();
+                if (rn %2 == 0) {
+                    break;
+                }
+            }
+
+            // 3. 为每个cell添加点击监听事件
+            for (let i=0; i<this.cells.length; i++) {
+
+                // 临时保存一下this本身的索引，因为在addEventListener的闭包函数中，this的含义会发生改变
+                let game = this;
+
+                this.cells[i].addEventListener("click", function () {
+                    // 判断被点击的格子周围，有没有空白格，有的话，则与它交换
+                    for (let j=0; j<game.directs.length; j++) {
+                        // 获取周围的下标k
+                        let k = i+game.directs[j];
+                        // 判断k是否出界
+                        if (k<0 || k>8) {
+                            continue;
+                        }
+                        // 找到空格，交换
+                        if (game.cells[k].innerText == "") {
+                            game.cells[k].innerText = game.cells[i].innerText;
+                            game.cells[i].innerText = "";
+
+                            // 每次交换过后，判断游戏是否结束
+                            if (game.hasGameOver()) {
+                                alert("恭喜通关");
+                                history.go(0);
+                            }
+                        }
+                    }
+                })
+            }
+        };
+
+        // 为每个cell随机填充一个数字
+        this.randomFillCells = function () {
+            let numbers=["1","2","3","4","5","6","7","8",""];
+            for (let i=0; i<this.cells.length; i++) {
+                let j = Math.floor(Math.random()*numbers.length);
+                this.cells[i].innerText = numbers[j];
+                numbers.splice(j, 1)
+            }
+        };
+
+        // 获取全局逆序数。设‘逆序’为前一个方格的数字比后一个方格的数字大。
+        // 当全盘的逆序数是奇数，则游戏无解
+        this.reverseNumber = function () {
+            let rn = 0;
+
+            for (let i=0; i<this.cells.length; i++) {
+                for (let j=i+1; j<this.cells.length; j++) {
+                    if (this.cells[i].innerText == "" || this.cells[j].innerText == "") {
+                        continue;
+                    }
+
+                    if (parseInt(this.cells[i].innerText) > parseInt(this.cells[j].innerText)) {
+                        rn++;
+                    }
+                }
+            }
+
+            return rn;
+        };
+
+        // 判断游戏是否结束，判断标准是，从第0~7格格子，他们的内容是否全部等于下标+1
+        this.hasGameOver = function () {
+            for (let i=0; i<this.cells.length-1; i++) {
+                if (this.cells[i].innerText != (i+1).toString()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    new JigsawPuzzle().Init();
+
+</script>
+</html>
